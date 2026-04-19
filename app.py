@@ -6,6 +6,26 @@ from rapidfuzz import process, fuzz
 st.markdown("<h1 style='color:red;'>KESTONE</h1>", unsafe_allow_html=True)
 st.title("Company Fuzzy Matching Tool")
 
+def check_password():
+    def password_entered():
+        if st.session_state["password"] == "kestone123":  # 👈 change this
+            st.session_state["authenticated"] = True
+        else:
+            st.session_state["authenticated"] = False
+
+    if "authenticated" not in st.session_state:
+        st.text_input("🔑 Enter Password", type="password", on_change=password_entered, key="password")
+        return False
+    elif not st.session_state["authenticated"]:
+        st.text_input("🔑 Enter Password", type="password", on_change=password_entered, key="password")
+        st.error("❌ Incorrect Password")
+        return False
+    else:
+        return True
+
+if not check_password():
+    st.stop()
+    
 def clean_name(name):
     name = str(name).lower()
     name = re.sub(r'\b(pvt|private|ltd|limited|llp|inc)\b', '', name)
