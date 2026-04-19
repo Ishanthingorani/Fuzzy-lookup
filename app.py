@@ -3,8 +3,9 @@ import pandas as pd
 import re
 from rapidfuzz import process, fuzz
 
-st.title("Company Fuzzy Matching Tool")
 st.markdown("<h1 style='color:red;'>KESTONE</h1>", unsafe_allow_html=True)
+st.title("Company Fuzzy Matching Tool")
+
 
 def clean_name(name):
     name = str(name).lower()
