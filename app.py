@@ -3,6 +3,22 @@ import pandas as pd
 import re
 from rapidfuzz import process, fuzz
 
+st.title("Company Fuzzy Matching Tool")
+
+def clean_name(name):
+    name = str(name).lower()
+    name = re.sub(r'\b(pvt|private|ltd|limited|llp|inc)\b', '', name)
+    name = re.sub(r'[^a-z0-9 ]', '', name)
+    return name.strip()
+
+def get_confidence(score):
+    if score >= 85:
+        return "High"
+    elif score >= 70:
+        return "Medium"
+    else:
+        return "Low"
+        
 USER_CREDENTIALS = {
     "cep-0068": "0068",
     "cep-0069": "0069",
@@ -52,21 +68,7 @@ def get_confidence(score):
         return "Low"
         
         
-st.title("Company Fuzzy Matching Tool")
 
-def clean_name(name):
-    name = str(name).lower()
-    name = re.sub(r'\b(pvt|private|ltd|limited|llp|inc)\b', '', name)
-    name = re.sub(r'[^a-z0-9 ]', '', name)
-    return name.strip()
-
-def get_confidence(score):
-    if score >= 85:
-        return "High"
-    elif score >= 70:
-        return "Medium"
-    else:
-        return "Low"
 
 file1 = st.file_uploader("Upload Client File", type=["csv", "xlsx"])
 file2 = st.file_uploader("Upload FIle For Fuzzy", type=["csv", "xlsx"])
