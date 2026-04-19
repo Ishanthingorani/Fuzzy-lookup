@@ -23,7 +23,7 @@ def get_confidence(score):
         
 USER_CREDENTIALS = {
     "cep-0068": "0068",
-    "KSTN-3175": "3175",
+    "kstn-3175": "3175",
     "KSTN-3175": "3175",
     # add more here
 }
