@@ -20,7 +20,7 @@ def get_confidence(score):
         return "Low"
 
 file1 = st.file_uploader("Upload Client File", type=["csv", "xlsx"])
-file2 = st.file_uploader("Upload Lusha File", type=["csv", "xlsx"])
+file2 = st.file_uploader("Upload FIle For Fuzzy", type=["csv", "xlsx"])
 
 if file1 and file2:
     df1 = pd.read_excel(file1) if file1.name.endswith("xlsx") else pd.read_csv(file1)
