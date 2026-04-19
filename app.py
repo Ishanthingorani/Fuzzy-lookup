@@ -24,11 +24,8 @@ def get_confidence(score):
 USER_CREDENTIALS = {
     "cep-0068": "0068",
     "kstn-3175": "3175",
-    "ki-0536": "0536",
-    "KI-0536": "0536",
-    # add more here
+    "ki-0536": "0536"
 }
-
 def check_login():
     def login():
         user_id = st.session_state["user_id"].lower()  # 👈 makes it case-insensitive
