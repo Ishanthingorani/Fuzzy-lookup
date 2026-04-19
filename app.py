@@ -3,6 +3,7 @@ import pandas as pd
 import re
 from rapidfuzz import process, fuzz
 
+st.title("KESTONE")
 st.title("Company Fuzzy Matching Tool")
 
 def clean_name(name):
