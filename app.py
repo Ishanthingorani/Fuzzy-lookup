@@ -67,20 +67,15 @@ def check_login():
 
 if not check_login():
     st.stop()
-# ================= CLEANING FUNCTION (LOOKUP KEY BUILDER) =================
+
+
+# ================= CLEANING FUNCTION =================
 def clean_name(name):
     name = str(name).lower()
 
-    # remove legal suffixes
     name = re.sub(r'\b(pvt|private|ltd|limited|llp|inc|co|company|corp|corporation|group)\b', '', name)
-
-    # normalize symbols
     name = name.replace("&", " and ")
-
-    # remove special characters
     name = re.sub(r'[^a-z0-9 ]', ' ', name)
-
-    # remove extra spaces
     name = re.sub(r'\s+', ' ', name)
 
     return name.strip()
@@ -96,6 +91,14 @@ def get_confidence(score):
         return "Low"
 
 
+# ================= MATCH STATUS (NEW) =================
+def match_status(score):
+    if score >= 60:
+        return "ACCEPT"
+    else:
+        return "REJECT"
+
+
 # ================= FILE UPLOAD =================
 file1 = st.file_uploader("Upload Client File", type=["csv", "xlsx"])
 file2 = st.file_uploader("Upload Lookup File", type=["csv", "xlsx"])
@@ -103,7 +106,6 @@ file2 = st.file_uploader("Upload Lookup File", type=["csv", "xlsx"])
 
 if file1 and file2:
 
-    # read files safely
     df1 = pd.read_excel(file1) if file1.name.lower().endswith("xlsx") else pd.read_csv(file1)
     df2 = pd.read_excel(file2) if file2.name.lower().endswith("xlsx") else pd.read_csv(file2)
 
@@ -152,7 +154,8 @@ if file1 and file2:
                 "Matched Company": lookup_map.get(match, ""),
                 "Clean Key": match,
                 "Score": score,
-                "Confidence": get_confidence(score)
+                "Confidence": get_confidence(score),
+                "Match Status": match_status(score)
             })
 
 
