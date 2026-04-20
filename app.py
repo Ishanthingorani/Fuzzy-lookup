@@ -105,6 +105,7 @@ if file1 and file2:
 
         result_df = pd.DataFrame(results)
         st.dataframe(result_df)
+        "Review Required": "Yes" if score < 70 else "No"
 
         csv = result_df.to_csv(index=False).encode('utf-8')
         st.download_button("Download CSV", csv, "result.csv")
