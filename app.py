@@ -15,25 +15,51 @@ USER_CREDENTIALS = {
     "ki-0536": "0536"
 }
 
-def check_login():
-    def login():
-        user_id = st.session_state["user_id"].strip().lower()
-        password = st.session_state["password"]
+def login_check():
+    user_id = st.session_state.get("user_id", "").strip().lower()
+    password = st.session_state.get("password", "")
 
-        if user_id in USER_CREDENTIALS and USER_CREDENTIALS[user_id] == password:
-            st.session_state["authenticated"] = True
-        else:
-            st.session_state["authenticated"] = False
+    if user_id in USER_CREDENTIALS and USER_CREDENTIALS[user_id] == password:
+        st.session_state["authenticated"] = True
+    else:
+        st.session_state["authenticated"] = False
+
+
+def check_login():
 
     if "authenticated" not in st.session_state:
-        st.text_input("👤 User ID", key="user_id")
-        st.text_input("🔑 Password", type="password", key="password", on_change=login)
-        return False
+        st.session_state["authenticated"] = False
 
-    elif not st.session_state["authenticated"]:
+    if not st.session_state["authenticated"]:
+
         st.text_input("👤 User ID", key="user_id")
-        st.text_input("🔑 Password", type="password", key="password", on_change=login)
-        st.error("❌ Invalid ID or Password")
+        st.text_input("🔑 Password", type="password", key="password")
+
+        st.markdown("""
+        <style>
+        div.stButton > button {
+            background-color: black;
+            color: white;
+            border-radius: 6px;
+            height: 40px;
+            width: 120px;
+            font-weight: bold;
+        }
+        div.stButton > button:hover {
+            background-color: #222222;
+            color: white;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+
+        if st.button("Login"):
+            login_check()
+            if not st.session_state["authenticated"]:
+                st.error("❌ Invalid ID or Password")
+            else:
+                st.success("✅ Login Successful")
+                st.rerun()
+
         return False
 
     return True
@@ -41,8 +67,6 @@ def check_login():
 
 if not check_login():
     st.stop()
-
-
 # ================= CLEANING FUNCTION (LOOKUP KEY BUILDER) =================
 def clean_name(name):
     name = str(name).lower()
