@@ -3,32 +3,21 @@ import pandas as pd
 import re
 from rapidfuzz import process, fuzz
 
+# ================= UI =================
 st.markdown("<h1 style='color:red;'>KESTONE</h1>", unsafe_allow_html=True)
-st.title("Company Fuzzy Matching Tool")
+st.title("Company Fuzzy Matching Tool (Excel-Like Lookup Engine)")
 
 
-def clean_name(name):
-    name = str(name).lower()
-    name = re.sub(r'\b(pvt|private|ltd|limited|llp|inc)\b', '', name)
-    name = re.sub(r'[^a-z0-9 ]', '', name)
-    return name.strip()
-
-def get_confidence(score):
-    if score >= 85:
-        return "High"
-    elif score >= 70:
-        return "Medium"
-    else:
-        return "Low"
-        
+# ================= LOGIN =================
 USER_CREDENTIALS = {
     "cep-0068": "0068",
     "kstn-3175": "3175",
     "ki-0536": "0536"
 }
+
 def check_login():
     def login():
-        user_id = st.session_state["user_id"].lower()  # 👈 makes it case-insensitive
+        user_id = st.session_state["user_id"].strip().lower()
         password = st.session_state["password"]
 
         if user_id in USER_CREDENTIALS and USER_CREDENTIALS[user_id] == password:
@@ -47,19 +36,33 @@ def check_login():
         st.error("❌ Invalid ID or Password")
         return False
 
-    else:
-        return True
+    return True
 
 
 if not check_login():
     st.stop()
-    
+
+
+# ================= CLEANING FUNCTION (LOOKUP KEY BUILDER) =================
 def clean_name(name):
     name = str(name).lower()
-    name = re.sub(r'\b(pvt|private|ltd|limited|llp|inc)\b', '', name)
-    name = re.sub(r'[^a-z0-9 ]', '', name)
+
+    # remove legal suffixes
+    name = re.sub(r'\b(pvt|private|ltd|limited|llp|inc|co|company|corp|corporation|group)\b', '', name)
+
+    # normalize symbols
+    name = name.replace("&", " and ")
+
+    # remove special characters
+    name = re.sub(r'[^a-z0-9 ]', ' ', name)
+
+    # remove extra spaces
+    name = re.sub(r'\s+', ' ', name)
+
     return name.strip()
 
+
+# ================= CONFIDENCE =================
 def get_confidence(score):
     if score >= 85:
         return "High"
@@ -67,44 +70,74 @@ def get_confidence(score):
         return "Medium"
     else:
         return "Low"
-        
-        
 
 
+# ================= FILE UPLOAD =================
 file1 = st.file_uploader("Upload Client File", type=["csv", "xlsx"])
-file2 = st.file_uploader("Upload FIle For Fuzzy", type=["csv", "xlsx"])
+file2 = st.file_uploader("Upload Lookup File", type=["csv", "xlsx"])
+
 
 if file1 and file2:
-    df1 = pd.read_excel(file1) if file1.name.endswith("xlsx") else pd.read_csv(file1)
-    df2 = pd.read_excel(file2) if file2.name.endswith("xlsx") else pd.read_csv(file2)
+
+    # read files safely
+    df1 = pd.read_excel(file1) if file1.name.lower().endswith("xlsx") else pd.read_csv(file1)
+    df2 = pd.read_excel(file2) if file2.name.lower().endswith("xlsx") else pd.read_csv(file2)
 
     col1 = st.selectbox("Client Column", df1.columns)
-    col2 = st.selectbox("For Fuzzy lookup File Column", df2.columns)
+    col2 = st.selectbox("Lookup Column", df2.columns)
+
 
     if st.button("Run Matching"):
+
+        st.info("Processing fuzzy lookup...")
+
         results = []
 
-        lusha_raw = df2[col2].dropna().astype(str).tolist()
-        lusha_clean = [clean_name(x) for x in lusha_raw]
+        # ================= PREP LOOKUP TABLE =================
+        df2 = df2.drop_duplicates(subset=[col2]).copy()
 
+        df2["clean"] = df2[col2].astype(str).apply(clean_name)
+
+        lookup_clean_list = df2["clean"].tolist()
+        lookup_raw_list = df2[col2].astype(str).tolist()
+
+        lookup_map = dict(zip(lookup_clean_list, lookup_raw_list))
+
+
+        # ================= MATCHING =================
         for name in df1[col1].dropna().astype(str):
+
             cleaned = clean_name(name)
 
-            match, score, idx = process.extractOne(
+            match_result = process.extractOne(
                 cleaned,
-                lusha_clean,
-                scorer=fuzz.token_sort_ratio
+                lookup_clean_list,
+                scorer=fuzz.WRatio
             )
+
+            if not match_result:
+                continue
+
+            match, score, idx = match_result
+
+            if score < 60:
+                continue
 
             results.append({
                 "Client Company": name,
-                "Matched Company": lusha_raw[idx],
+                "Matched Company": lookup_map.get(match, ""),
+                "Clean Key": match,
                 "Score": score,
                 "Confidence": get_confidence(score)
             })
 
+
+        # ================= OUTPUT =================
         result_df = pd.DataFrame(results)
+
+        st.success("Matching Completed!")
+
         st.dataframe(result_df)
 
-        csv = result_df.to_csv(index=False).encode('utf-8')
-        st.download_button("Download CSV", csv, "result.csv")
+        csv = result_df.to_csv(index=False).encode("utf-8")
+        st.download_button("Download CSV", csv, "fuzzy_lookup_result.csv")
