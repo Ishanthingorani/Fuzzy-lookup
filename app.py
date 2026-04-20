@@ -6,7 +6,7 @@ from rapidfuzz import process, fuzz
 st.markdown("<h1 style='color:red;'>KESTONE</h1>", unsafe_allow_html=True)
 st.title("Company Fuzzy Matching Tool")
 
-# 🔐 USER LOGIN
+# 🔐 LOGIN
 USER_CREDENTIALS = {
     "cep-0068": "0068",
     "kstn-3175": "3175",
@@ -34,13 +34,12 @@ def check_login():
         st.error("❌ Invalid ID or Password")
         return False
 
-    else:
-        return True
+    return True
 
 if not check_login():
     st.stop()
 
-# 📊 Confidence Logic (Manager Friendly)
+# 📊 Confidence Logic
 def get_confidence(score):
     if score >= 85:
         return "High"
@@ -49,7 +48,7 @@ def get_confidence(score):
     else:
         return "Low"
 
-# 🧠 Token Overlap (Excel-like logic)
+# 🧠 Token Overlap
 def token_overlap_score(a, b):
     set1 = set(a.lower().split())
     set2 = set(b.lower().split())
@@ -62,13 +61,26 @@ def token_overlap_score(a, b):
 
     return int((overlap / total) * 100)
 
-# 📂 File Upload
+# 📂 SAFE FILE READER (FIXED ERROR)
+def read_file(file):
+    try:
+        if file.name.endswith("xlsx"):
+            return pd.read_excel(file)
+        else:
+            return pd.read_csv(file, encoding="utf-8")
+    except:
+        try:
+            return pd.read_csv(file, encoding="latin1")
+        except:
+            return pd.read_csv(file, encoding="ISO-8859-1")
+
+# 📂 Upload
 file1 = st.file_uploader("Upload Client File", type=["csv", "xlsx"])
 file2 = st.file_uploader("Upload File For Fuzzy Matching", type=["csv", "xlsx"])
 
 if file1 and file2:
-    df1 = pd.read_excel(file1) if file1.name.endswith("xlsx") else pd.read_csv(file1)
-    df2 = pd.read_excel(file2) if file2.name.endswith("xlsx") else pd.read_csv(file2)
+    df1 = read_file(file1)
+    df2 = read_file(file2)
 
     col1 = st.selectbox("Client Column", df1.columns)
     col2 = st.selectbox("Fuzzy Match Column", df2.columns)
@@ -80,7 +92,6 @@ if file1 and file2:
 
         for name in df1[col1].dropna().astype(str):
 
-            # 🔍 Get top 3 matches
             matches = process.extract(
                 name,
                 lusha_raw,
@@ -91,13 +102,13 @@ if file1 and file2:
             best = matches[0]
             match_name = best[0]
 
-            # 🧠 Score Calculation
+            # Scores
             fuzzy_score = best[1]
             overlap_score = token_overlap_score(name, match_name)
 
             score = max(fuzzy_score, overlap_score)
 
-            # 🔥 Substring Boost (Excel-like)
+            # Substring Boost
             if name.lower() in match_name.lower():
                 score = max(score, 90)
 
@@ -112,9 +123,8 @@ if file1 and file2:
 
         result_df = pd.DataFrame(results)
 
-        # 📊 Display
         st.dataframe(result_df)
 
-        # 📥 Download
+        # Download
         csv = result_df.to_csv(index=False).encode('utf-8')
         st.download_button("Download CSV", csv, "result.csv")
