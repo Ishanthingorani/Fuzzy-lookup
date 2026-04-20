@@ -93,7 +93,7 @@ def get_confidence(score):
 
 # ================= MATCH STATUS (NEW) =================
 def match_status(score):
-    if score >= 60:
+    if score >= 61:
         return "ACCEPT"
     else:
         return "REJECT"
