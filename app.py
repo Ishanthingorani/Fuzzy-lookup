@@ -75,8 +75,8 @@ file1 = st.file_uploader("Upload Client File", type=["csv", "xlsx"])
 file2 = st.file_uploader("Upload FIle For Fuzzy", type=["csv", "xlsx"])
 
 if file1 and file2:
-df1 = pd.read_excel(file1) if file1.name.endswith("xlsx") else pd.read_csv(file1)
-df2 = pd.read_excel(file2) if file2.name.endswith("xlsx") else pd.read_csv(file2)
+    df1 = pd.read_excel(file1) if file1.name.endswith("xlsx") else pd.read_csv(file1)
+    df2 = pd.read_excel(file2) if file2.name.endswith("xlsx") else pd.read_csv(file2)
 
     col1 = st.selectbox("Client Column", df1.columns)
     col2 = st.selectbox("For Fuzzy lookup File Column", df2.columns)
